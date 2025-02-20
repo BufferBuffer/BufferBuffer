@@ -1,0 +1,183 @@
+import tkinter as tk
+from tkinter import ttk, messagebox
+from datetime import datetime
+import os
+
+class TramSoftApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("TRAM SOFT")
+        self.root.geometry("1200x800")
+        self.root.configure(bg="#1a1a1a")
+        
+        # Style configuration
+        self.style = ttk.Style()
+        self.style.theme_use('clam')
+        self.configure_styles()
+        
+        # Main container
+        self.main_frame = ttk.Frame(root)
+        self.main_frame.pack(fill=tk.BOTH, expand=True)
+        
+        # Header
+        self.create_header()
+        
+        # Pages dictionary
+        self.pages = {}
+        self.current_page = None
+        
+        # Create main menu
+        self.create_main_menu()
+        
+        # Clock update
+        self.update_clock()
+
+    def configure_styles(self):
+        self.style.configure('TButton', font=('Helvetica', 10), padding=10)
+        self.style.configure('Header.TLabel', 
+                           font=('Helvetica', 16, 'bold'), 
+                           background="#2d2d2d", 
+                           foreground="#4a9cff")
+        self.style.map('Nav.TButton',
+                     foreground=[('active', '#ffffff'), ('!active', '#ffffff')],
+                     background=[('active', '#373737'), ('!active', '#2d2d2d')])
+
+    def create_header(self):
+        header_frame = ttk.Frame(self.main_frame, style='Header.TFrame')
+        header_frame.pack(fill=tk.X, padx=10, pady=10)
+        
+        # Logo
+        logo_label = ttk.Label(header_frame, 
+                             text="TRAM SOFT", 
+                             style='Header.TLabel')
+        logo_label.pack(side=tk.LEFT)
+        
+        # Time and Date
+        self.time_label = ttk.Label(header_frame, 
+                                  style='Header.TLabel',
+                                  font=('Helvetica', 12))
+        self.time_label.pack(side=tk.RIGHT)
+
+    def create_main_menu(self):
+        self.menu_frame = ttk.Frame(self.main_frame)
+        self.menu_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
+        
+        menu_items = [
+            ("Purchase Invoices", "#ef4444"),
+            ("Godown Transfer", "#f97316"),
+            ("Invoices", "#eab308"),
+            ("Receipts", "#22c55e"),
+            ("Payments", "#3b82f6"),
+            ("Journal Vouchers", "#a855f7"),
+            ("Sale Return", "#ec4899"),
+            ("Purchase Return", "#dc2626"),
+            ("IMEI Tracking", "#16a34a"),
+            ("Assets Ledger", "#ef4444"),
+            ("Liabilities Ledger", "#f97316"),
+            ("Capital Ledger", "#eab308"),
+            ("Accounts Manager", "#22c55e"),
+            ("Expenses Ledger", "#3b82f6"),
+            ("Revenue Ledger", "#a855f7"),
+            ("Stock Ledger", "#ec4899"),
+            ("Stock Manager", "#ef4444"),
+            ("Accessories", "#0d9488"),
+            ("Trial Balance", "#6366f1"),
+            ("Aged Trial Balance", "#f97316"),
+            ("Income Statement", "#eab308"),
+            ("Balance Sheet", "#6b7280"),
+            ("Profit & Loss", "#3b82f6"),
+            ("All Accounts", "#a855f7"),
+            ("Aging Report", "#ec4899"),
+            ("All Reports", "#ef4444"),
+            ("Export", "#6b7280"),
+            ("WhatsApp", "#16a34a"),
+            ("SMS", "#3b82f6"),
+            ("Utilities", "#a855f7"),
+            ("Settings", "#6b7280"),
+            ("License", "#dc2626"),
+            ("Activation", "#f97316"),
+            ("Profile", "#3b82f6"),
+            ("Contact", "#22c55e"),
+            ("Exit", "#991b1b")
+        ]
+
+        # Create grid buttons
+        row, col = 0, 0
+        for text, color in menu_items:
+            btn = ttk.Button(self.menu_frame,
+                           text=text,
+                           style='Nav.TButton',
+                           command=lambda t=text: self.show_page(t))
+            btn.grid(row=row, column=col, padx=5, pady=5, sticky="nsew")
+            btn.config(width=20)
+            
+            col += 1
+            if col > 3:
+                col = 0
+                row += 1
+
+        # Configure grid weights
+        for i in range(4):
+            self.menu_frame.columnconfigure(i, weight=1)
+        for i in range(row+1):
+            self.menu_frame.rowconfigure(i, weight=1)
+
+    def show_page(self, page_name):
+        if page_name == "Exit":
+            if messagebox.askyesno("Exit", "کیا آپ واقعی ایپ سے باہر نکلنا چاہتے ہیں؟"):
+                self.root.destroy()
+            return
+        
+        # Hide main menu
+        self.menu_frame.pack_forget()
+        
+        # Create page if not exists
+        if page_name not in self.pages:
+            self.create_page(page_name)
+        
+        # Show selected page
+        self.pages[page_name].pack(fill=tk.BOTH, expand=True)
+        self.current_page = page_name
+
+    def create_page(self, page_name):
+        page_frame = ttk.Frame(self.main_frame)
+        
+        # Back button
+        back_btn = ttk.Button(page_frame, 
+                            text="← Back to Menu",
+                            command=self.show_main_menu)
+        back_btn.pack(pady=10)
+        
+        # Page content
+        title_label = ttk.Label(page_frame, 
+                              text=page_name.upper(),
+                              font=('Helvetica', 16, 'bold'),
+                              foreground="#4a9cff")
+        title_label.pack(pady=20)
+        
+        content_frame = ttk.Frame(page_frame, style='Content.TFrame')
+        content_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
+        
+        content_label = ttk.Label(content_frame, 
+                                text=f"{page_name} کا مواد یہاں ظاہر ہوگا...",
+                                font=('Helvetica', 12))
+        content_label.pack(pady=50)
+        
+        self.pages[page_name] = page_frame
+
+    def show_main_menu(self):
+        if self.current_page:
+            self.pages[self.current_page].pack_forget()
+        self.menu_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
+
+    def update_clock(self):
+        now = datetime.now()
+        time_str = now.strftime("%H:%M:%S")
+        date_str = now.strftime("%d %B %Y")
+        self.time_label.config(text=f"{date_str} | {time_str}")
+        self.root.after(1000, self.update_clock)
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = TramSoftApp(root)
+    root.mainloop()
